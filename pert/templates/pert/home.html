@@ -1,0 +1,106 @@
+{% extends 'pert/base.html' %}
+
+{% block title %}Accueil - PERT Manager{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-xl p-12 text-white mb-8">
+    <div class="max-w-3xl mx-auto text-center">
+        <h1 class="text-5xl font-bold mb-4">Bienvenue sur PERT Manager</h1>
+        <p class="text-xl mb-8">Créez et gérez vos diagrammes PERT en toute simplicité</p>
+        <div class="flex justify-center space-x-4">
+            <a href="{% url 'projet_create' %}" class="bg-white text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-lg shadow-lg transition transform hover:scale-105">
+                Créer un nouveau projet
+            </a>
+            <a href="{% url 'projet_list' %}" class="bg-blue-700 text-white hover:bg-blue-800 font-bold py-3 px-8 rounded-lg shadow-lg transition transform hover:scale-105">
+                Voir mes projets
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Qu'est-ce qu'un diagramme PERT ? -->
+<div class="grid md:grid-cols-2 gap-8 mb-12">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+            <div class="bg-blue-100 rounded-full p-3 mr-4">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Qu'est-ce qu'un PERT ?</h2>
+        </div>
+        <p class="text-gray-600 leading-relaxed">
+            Le PERT (Program Evaluation and Review Technique) est une méthode de gestion de projet qui permet de 
+            planifier et coordonner les différentes tâches d'un projet. Il identifie le chemin critique, 
+            c'est-à-dire la séquence de tâches qui détermine la durée minimale du projet.
+        </p>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <div class="flex items-center mb-4">
+            <div class="bg-green-100 rounded-full p-3 mr-4">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Pourquoi utiliser PERT ?</h2>
+        </div>
+        <ul class="text-gray-600 space-y-2">
+            <li class="flex items-start">
+                <span class="text-green-600 mr-2">✓</span>
+                <span>Visualiser les dépendances entre tâches</span>
+            </li>
+            <li class="flex items-start">
+                <span class="text-green-600 mr-2">✓</span>
+                <span>Identifier les tâches critiques</span>
+            </li>
+            <li class="flex items-start">
+                <span class="text-green-600 mr-2">✓</span>
+                <span>Optimiser la durée du projet</span>
+            </li>
+            <li class="flex items-start">
+                <span class="text-green-600 mr-2">✓</span>
+                <span>Améliorer la planification des ressources</span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<!-- Fonctionnalités -->
+<div class="bg-white rounded-lg shadow-md p-8">
+    <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">Fonctionnalités principales</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+        <div class="text-center p-4">
+            <div class="bg-purple-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+            </div>
+            <h3 class="font-bold text-lg mb-2">Créer des projets</h3>
+            <p class="text-gray-600 text-sm">Ajoutez facilement vos projets avec leurs tâches et dépendances</p>
+        </div>
+
+        <div class="text-center p-4">
+            <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+            </div>
+            <h3 class="font-bold text-lg mb-2">Calculer automatiquement</h3>
+            <p class="text-gray-600 text-sm">Le système calcule les dates et identifie le chemin critique</p>
+        </div>
+
+        <div class="text-center p-4">
+            <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                </svg>
+            </div>
+            <h3 class="font-bold text-lg mb-2">Visualiser le diagramme</h3>
+            <p class="text-gray-600 text-sm">Affichez votre diagramme PERT de manière claire et interactive</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
