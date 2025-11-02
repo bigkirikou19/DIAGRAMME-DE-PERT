@@ -1,0 +1,94 @@
+{% extends 'pert/base.html' %}
+
+{% block title %}
+    {% comment %} Amélioration: Majuscule sur {{ action }} pour un meilleur titre {% endcomment %}
+    {{ action|capfirst }} un projet - PERT Manager
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="bg-white rounded-xl shadow-2xl p-6 sm:p-8 lg:p-10 border border-gray-100">
+        
+        <div class="mb-8 border-b pb-4">
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-2">
+                {% if action == 'Modifier' %}
+                    ✏️ Modifier les détails du projet
+                {% else %}
+                    ➕ Créer un nouveau projet
+                {% endif %}
+            </h1>
+            <p class="text-gray-600">Remplissez les informations de base de votre projet PERT.</p>
+        </div>
+
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+            
+            {% comment %}
+                Utilisation de l'approche la plus simple (form.as_p ou form.as_table) nécessiterait un pré-rendu ou un filtre custom pour les classes.
+                Ici, nous allons rendre les champs manuellement pour appliquer les styles, ce qui est souvent préférable pour un contrôle total.
+            {% endcomment %}
+
+            <div class="form-group">
+                <label for="{{ form.nom.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                    {{ form.nom.label }} <span class="text-red-500">*</span>
+                </label>
+                <input 
+                    type="text" 
+                    name="{{ form.nom.name }}" 
+                    id="{{ form.nom.id_for_label }}"
+                    value="{{ form.nom.value|default:'' }}"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition text-lg shadow-sm placeholder-gray-400 {% if form.nom.errors %}border-red-500{% endif %}"
+                    placeholder="Ex: Construction de la maison"
+                    required
+                >
+                {% if form.nom.errors %}
+                    <p class="mt-2 text-sm text-red-600 font-medium">{{ form.nom.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.description.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+                    {{ form.description.label }} (Optionnel)
+                </label>
+                <textarea
+                    name="{{ form.description.name }}" 
+                    id="{{ form.description.id_for_label }}"
+                    rows="4"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition shadow-sm placeholder-gray-400 {% if form.description.errors %}border-red-500{% endif %}"
+                    placeholder="Décrivez l'objectif et la portée du projet..."
+                >{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    <p class="mt-2 text-sm text-red-600 font-medium">{{ form.description.errors.0 }}</p>
+                {% endif %}
+                <p class="mt-2 text-xs text-gray-500">Une brève description aidera à identifier le projet.</p>
+            </div>
+
+            {% if form.non_field_errors %}
+            <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+                <p class="font-bold">Erreur(s) du formulaire :</p>
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+                <button 
+                    type="submit" 
+                    class="sm:flex-1 w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-200 ease-in-out transform hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center text-lg"
+                >
+                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
+                    {{ action }} le projet
+                </button>
+                
+                <a 
+                    href="{% if projet %}{% url 'projet_detail' projet.pk %}{% else %}{% url 'projet_list' %}{% endif %}" 
+                    class="sm:flex-1 w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-semibold py-3 px-6 rounded-xl transition duration-200 ease-in-out text-center flex items-center justify-center text-lg"
+                >
+                    Annuler
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

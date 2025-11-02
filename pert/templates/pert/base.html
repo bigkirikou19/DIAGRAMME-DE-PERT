@@ -1,60 +1,90 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Diagramme PERT{% endblock %}</title>
+    <title>{% block title %}PERT Manager{% endblock %}</title>
     
-    <!-- Tailwind CSS via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    {% comment %} Configuration optionnelle de Tailwind pour les couleurs personnalisées et les ombres {% endcomment %}
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': '#1d4ed8', // blue-700
+                        'secondary': '#1e40af', // blue-800
+                    },
+                    boxShadow: {
+                        '3xl': '0 35px 60px -15px rgba(0, 0, 0, 0.3)',
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <!-- Navigation -->
-    <nav class="bg-gradient-to-r from-blue-600 to-blue-700 shadow-lg">
-        <div class="container mx-auto px-4">
+<body class="bg-gray-50 min-h-screen flex flex-col antialiased">
+    
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
-                <div class="flex items-center space-x-3">
-                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                
+                <div class="flex items-center space-x-3 flex-shrink-0">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                     </svg>
-                    <a href="{% url 'home' %}" class="text-white text-2xl font-bold">PERT Manager</a>
+                    <a href="{% url 'home' %}" class="text-gray-900 text-2xl font-extrabold tracking-tight">
+                        PERT<span class="text-blue-600">Manager</span>
+                    </a>
                 </div>
                 
-                <div class="flex items-center space-x-4">
-                    <a href="{% url 'home' %}" class="text-white hover:text-blue-200 transition px-3 py-2 rounded-md text-sm font-medium">
+                <div class="flex items-center space-x-1 sm:space-x-4">
+                    <a href="{% url 'home' %}" class="text-gray-600 hover:text-blue-600 transition px-3 py-2 rounded-lg text-sm font-medium hidden sm:block">
                         Accueil
                     </a>
-                    <a href="{% url 'projet_list' %}" class="text-white hover:text-blue-200 transition px-3 py-2 rounded-md text-sm font-medium">
+                    <a href="{% url 'projet_list' %}" class="text-gray-600 hover:text-blue-600 transition px-3 py-2 rounded-lg text-sm font-medium">
                         Mes Projets
                     </a>
-                    <a href="{% url 'projet_create' %}" class="bg-white text-blue-600 hover:bg-blue-50 transition px-4 py-2 rounded-md text-sm font-medium">
-                        + Nouveau Projet
+                    <a href="{% url 'projet_create' %}" class="bg-blue-600 text-white hover:bg-blue-700 transition px-4 py-2 rounded-lg text-sm font-semibold shadow-md flex items-center transform hover:scale-[1.02]">
+                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                        Nouveau Projet
                     </a>
                 </div>
             </div>
-        </div>
-    </nav>
+        </nav>
+    </header>
 
-    <!-- Messages Flash -->
     {% if messages %}
-    <div class="container mx-auto px-4 mt-4">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         {% for message in messages %}
-        <div class="{% if message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% elif message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} border px-4 py-3 rounded relative mb-4" role="alert">
-            <span class="block sm:inline">{{ message }}</span>
+        {% comment %} Ajustement des tags de message pour correspondre aux couleurs de l'application {% endcomment %}
+        {% with tags=message.tags|lower %}
+        <div class="
+            {% if 'success' in tags %}bg-green-100 border-green-500 text-green-700
+            {% elif 'error' in tags or 'danger' in tags %}bg-red-100 border-red-500 text-red-700
+            {% elif 'warning' in tags %}bg-yellow-100 border-yellow-500 text-yellow-700
+            {% else %}bg-blue-100 border-blue-500 text-blue-700
+            {% endif %} 
+            border-l-4 p-4 rounded-lg shadow-md mb-4" role="alert">
+            <span class="font-medium">{{ message }}</span>
         </div>
+        {% endwith %}
         {% endfor %}
     </div>
     {% endif %}
 
-    <!-- Contenu principal -->
-    <main class="container mx-auto px-4 py-8">
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 text-white mt-auto py-6">
-        <div class="container mx-auto px-4 text-center">
-            <p>&copy; 2025 PERT Manager - Gestion de diagrammes PERT</p>
+    <footer class="bg-gray-900 text-gray-400 py-6 mt-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm">
+                &copy; {{ "now"|date:"Y" }} PERT Manager. Optimisez votre gestion de projet.
+            </p>
+            <p class="text-xs mt-1 text-gray-500">
+                Méthode PERT et Analyse du Chemin Critique.
+            </p>
         </div>
     </footer>
 

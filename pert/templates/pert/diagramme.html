@@ -1,320 +1,173 @@
-{% extends 'pert/base.html' %}
-{% load static %}
-
-{% block title %}Diagramme PERT - {{ projet.nom }}{% endblock %}
-
-{% block content %}
-<!-- En-tête -->
-<div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-xl p-6 text-white mb-6">
-    <div class="flex justify-between items-center">
-        <div>
-            <h1 class="text-3xl font-bold mb-1">Diagramme PERT</h1>
-            <p class="text-blue-100">{{ projet.nom }}</p>
-        </div>
-        <a href="{% url 'projet_detail' projet.id %}" class="bg-white text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-lg transition">
-            Retour au projet
-        </a>
-    </div>
-</div>
-
-<!-- Statistiques -->
-<div class="grid md:grid-cols-4 gap-4 mb-6">
-    <div class="bg-white rounded-lg shadow p-4">
-        <p class="text-gray-500 text-sm">Durée totale</p>
-        <p class="text-2xl font-bold text-blue-600" id="duree-totale">{{ duree_totale|default:"0" }} jours</p>
-    </div>
-    <div class="bg-white rounded-lg shadow p-4">
-        <p class="text-gray-500 text-sm">Tâches critiques</p>
-        <p class="text-2xl font-bold text-red-600" id="nb-critiques">{{ taches_critiques.count }}</p>
-    </div>
-    <div class="bg-white rounded-lg shadow p-4">
-        <p class="text-gray-500 text-sm">Total tâches</p>
-        <p class="text-2xl font-bold text-green-600">{{ taches.count }}</p>
-    </div>
-    <div class="bg-white rounded-lg shadow p-4">
-        <p class="text-gray-500 text-sm">Marge maximale</p>
-        <p class="text-2xl font-bold text-purple-600" id="marge-max">{{ marge_max|default:"0" }} jours</p>
-    </div>
-</div>
-
-<!-- Contrôles du diagramme -->
-<div class="bg-white rounded-lg shadow-md p-4 mb-6">
-    <div class="flex items-center justify-between flex-wrap gap-4">
-        <div class="flex items-center space-x-4">
-            <button id="zoom-in" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"></path>
-                </svg>
-            </button>
-            <button id="zoom-out" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"></path>
-                </svg>
-            </button>
-            <button id="reset-zoom" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded transition">
-                Réinitialiser
-            </button>
-        </div>
-
-        <!-- Légende -->
-        <div class="flex items-center space-x-4 text-sm">
-            <div class="flex items-center">
-                <div class="w-4 h-4 bg-red-500 rounded mr-2"></div>
-                <span>Tâche critique</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-4 h-4 bg-blue-500 rounded mr-2"></div>
-                <span>Tâche normale</span>
-            </div>
-            <div class="flex items-center">
-                <div class="w-4 h-4 border-2 border-red-500 rounded mr-2"></div>
-                <span>Chemin critique</span>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Canvas du diagramme -->
-<div class="bg-white rounded-lg shadow-md p-6">
-    {% if taches %}
-    <div class="border-2 border-gray-200 rounded-lg overflow-auto" style="max-height: 600px;">
-        <canvas id="pert-canvas" class="w-full" style="min-height: 500px;"></canvas>
-    </div>
-    {% else %}
-    <div class="text-center py-16">
-        <svg class="w-24 h-24 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-        </svg>
-        <h3 class="text-xl font-semibold text-gray-700 mb-2">Aucune tâche à afficher</h3>
-        <p class="text-gray-500 mb-4">Ajoutez des tâches à votre projet pour générer le diagramme PERT</p>
-        <a href="{% url 'tache_create' projet.id %}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">
-            Ajouter des tâches
-        </a>
-    </div>
-    {% endif %}
-</div>
-
-<!-- Chemin critique -->
-{% if chemin_critique %}
-<div class="bg-red-50 border-2 border-red-200 rounded-lg p-6 mt-6">
-    <h2 class="text-2xl font-bold text-red-800 mb-4 flex items-center">
-        <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-        </svg>
-        Chemin critique
-    </h2>
-    <p class="text-red-700 mb-4">
-        Le chemin critique détermine la durée minimale du projet. Tout retard sur ces tâches retardera le projet entier.
-    </p>
-    <div class="flex flex-wrap gap-2">
-        {% for tache in chemin_critique %}
-        <div class="bg-white border-2 border-red-400 rounded-lg px-4 py-2">
-            <span class="font-bold text-red-600">{{ tache.code }}</span>
-            <span class="text-gray-700">- {{ tache.nom }}</span>
-            <span class="text-sm text-gray-500">({{ tache.duree }}j)</span>
-        </div>
-        {% if not forloop.last %}
-        <div class="flex items-center text-red-400">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-            </svg>
-        </div>
-        {% endif %}
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
-{% endblock %}
-
-{% block extra_js %}
-{% if taches %}
-<script>
-    // Données des tâches depuis Django
-    const taches = {{ taches_json|safe }};
-    const cheminCritique = {{ chemin_critique_codes|safe }};
-    // Configuration du canvas
-    const canvas = document.getElementById('pert-canvas');
-    const ctx = canvas.getContext('2d');
-
-    let scale = 1;
-    let offsetX = 0;
-    let offsetY = 0;
-    // Initialiser le canvas
-    function initCanvas() {
-        canvas.width = canvas.offsetWidth;
-        canvas.height = 600;
-        drawDiagram();
-    }
-    
-    // Dessiner le diagramme
-    function drawDiagram() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.save();
-        ctx.translate(offsetX, offsetY);
-        ctx.scale(scale, scale);
-        
-        // Calculer les positions des nœuds
-        const nodeRadius = 50;
-        const horizontalSpacing = 200;
-        const verticalSpacing = 150;
-        const startX = 100;
-        const startY = 100;
-        
-        // Organiser les tâches par niveaux (topological sort simplifié)
-        const positions = {};
-        let currentLevel = 0;
-        let maxLevel = 0;
-        
-        // Tâches sans dépendances au niveau 0
-        taches.forEach((tache, index) => {
-            if (tache.dependances.length === 0) {
-                positions[tache.code] = {
-                    x: startX,
-                    y: startY + (index * verticalSpacing),
-                    level: 0
-                };
-            }
-        });
-        
-        // Placer les autres tâches
-        let placed = Object.keys(positions).length;
-        let iterations = 0;
-        while (placed < taches.length && iterations < 100) {
-            taches.forEach(tache => {
-                if (!positions[tache.code]) {
-                    // Vérifier si toutes les dépendances sont placées
-                    const allDepsPlaced = tache.dependances.every(dep => positions[dep]);
-                    if (allDepsPlaced) {
-                        const maxDepLevel = Math.max(...tache.dependances.map(dep => positions[dep].level));
-                        const level = maxDepLevel + 1;
-                        const tasksAtLevel = Object.values(positions).filter(p => p.level === level).length;
-                        
-                        positions[tache.code] = {
-                            x: startX + (level * horizontalSpacing),
-                            y: startY + (tasksAtLevel * verticalSpacing),
-                            level: level
-                        };
-                        maxLevel = Math.max(maxLevel, level);
-                        placed++;
+// Dessiner le diagramme
+function drawDiagram() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    ctx.scale(scale, scale);
+    // Calculer les positions des nœuds
+    const nodeRadius = 50;
+    const horizontalSpacing = 200;
+    const verticalSpacing = 150;
+    const startX = 100;
+    const startY = 100;
+    // Organiser les tâches par niveaux (topological sort simplifié)
+    const positions = {};
+    let maxLevel = 0;
+    // Tâches sans dépendances au niveau 0
+    let tasksAtLevel0 = 0;
+    taches.forEach((tache) => {
+        if (tache.dependances.length === 0) {
+            positions[tache.code] = {
+                x: startX,
+                y: startY + (tasksAtLevel0 * verticalSpacing),
+                level: 0
+            };
+            tasksAtLevel0++;
+        }
+    });
+    // Placer les autres tâches
+    let placed = Object.keys(positions).length;
+    let iterations = 0;
+    const maxIterations = 100;
+    while (placed < taches.length && iterations < maxIterations) {
+        let placedInThisIteration = false;
+        taches.forEach(tache => {
+            if (!positions[tache.code]) {
+                // Vérifier si toutes les dépendances sont placées
+                const allDepsPlaced = tache.dependances.every(dep => positions[dep]);
+                if (allDepsPlaced) {
+                    // Calculer le niveau basé sur les dépendances
+                    let maxDepLevel = -1;
+                    if (tache.dependances.length > 0) {
+                        maxDepLevel = Math.max(...tache.dependances.map(dep => positions[dep].level));
                     }
+                    const level = maxDepLevel + 1;
+                    
+                    // Compter les tâches déjà à ce niveau
+                    const tasksAtLevel = Object.values(positions).filter(p => p.level === level).length;
+                    
+                    positions[tache.code] = {
+                        x: startX + (level * horizontalSpacing),
+                        y: startY + (tasksAtLevel * verticalSpacing),
+                        level: level
+                    };
+                    
+                    maxLevel = Math.max(maxLevel, level);
+                    placed++;
+                    placedInThisIteration = true;
                 }
-            });
-            iterations++;
-        }
-        
-        // Dessiner les flèches (dépendances)
-        taches.forEach(tache => {
-            const fromPos = positions[tache.code];
-            tache.dependances.forEach(depCode => {
-                const toPos = positions[depCode];
-                if (fromPos && toPos) {
-                    const isCritical = cheminCritique.includes(tache.code) && cheminCritique.includes(depCode);
-                    drawArrow(toPos.x, toPos.y, fromPos.x, fromPos.y, nodeRadius, isCritical);
-                }
-            });
-        });
-        
-        // Dessiner les nœuds
-        taches.forEach(tache => {
-            const pos = positions[tache.code];
-            if (pos) {
-                drawNode(pos.x, pos.y, tache, nodeRadius);
             }
         });
         
-        ctx.restore();
-    }
-    
-    // Dessiner un nœud
-    function drawNode(x, y, tache, radius) {
-        const isCritical = cheminCritique.includes(tache.code);
-        
-        // Cercle
-        ctx.beginPath();
-        ctx.arc(x, y, radius, 0, 2 * Math.PI);
-        ctx.fillStyle = isCritical ? '#fee2e2' : '#dbeafe';
-        ctx.fill();
-        ctx.strokeStyle = isCritical ? '#ef4444' : '#3b82f6';
-        ctx.lineWidth = isCritical ? 3 : 2;
-        ctx.stroke();
-        
-        // Code de la tâche
-        ctx.fillStyle = '#000';
-        ctx.font = 'bold 18px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(tache.code, x, y - 15);
-        
-        // Nom de la tâche
-        ctx.font = '12px Arial';
-        ctx.fillText(tache.nom.substring(0, 10), x, y + 5);
-        
-        // Durée
-        ctx.font = '11px Arial';
-        ctx.fillStyle = '#666';
-        ctx.fillText(tache.duree + 'j', x, y + 20);
-        
-        // Dates
-        if (tache.date_debut_tot !== null) {
-            ctx.font = '10px Arial';
-            ctx.fillText(`T: ${tache.date_debut_tot}`, x - 25, y + 35);
-            ctx.fillText(`F: ${tache.date_fin_tot}`, x + 25, y + 35);
+        // Si aucune tâche n'a été placée dans cette itération, on risque une boucle infinie
+        if (!placedInThisIteration) {
+            console.error("Impossible de placer toutes les tâches. Dépendances circulaires possibles.");
+            break;
         }
+        
+        iterations++;
     }
     
-    // Dessiner une flèche
-    function drawArrow(fromX, fromY, toX, toY, nodeRadius, isCritical) {
-        const angle = Math.atan2(toY - fromY, toX - fromX);
-        const startX = fromX + nodeRadius * Math.cos(angle);
-        const startY = fromY + nodeRadius * Math.sin(angle);
-        const endX = toX - nodeRadius * Math.cos(angle);
-        const endY = toY - nodeRadius * Math.sin(angle);
-        
-        ctx.beginPath();
-        ctx.moveTo(startX, startY);
-        ctx.lineTo(endX, endY);
-        ctx.strokeStyle = isCritical ? '#ef4444' : '#9ca3af';
-        ctx.lineWidth = isCritical ? 3 : 1.5;
-        ctx.stroke();
-        
-        // Pointe de la flèche
-        const headLength = 15;
-        ctx.beginPath();
-        ctx.moveTo(endX, endY);
-        ctx.lineTo(
-            endX - headLength * Math.cos(angle - Math.PI / 6),
-            endY - headLength * Math.sin(angle - Math.PI / 6)
-        );
-        ctx.lineTo(
-            endX - headLength * Math.cos(angle + Math.PI / 6),
-            endY - headLength * Math.sin(angle + Math.PI / 6)
-        );
-        ctx.closePath();
-        ctx.fillStyle = isCritical ? '#ef4444' : '#9ca3af';
-        ctx.fill();
+    // Vérifier si toutes les tâches ont été placées
+    if (placed < taches.length) {
+        console.warn(`Seulement ${placed} sur ${taches.length} tâches ont été placées.`);
     }
     
-    // Contrôles de zoom
-    document.getElementById('zoom-in').addEventListener('click', () => {
-        scale *= 1.2;
-        drawDiagram();
+    // Dessiner les flèches (dépendances)
+    taches.forEach(tache => {
+        const fromPos = positions[tache.code];
+        if (!fromPos) return;
+        
+        tache.dependances.forEach(depCode => {
+            const toPos = positions[depCode];
+            if (fromPos && toPos) {
+                const isCritical = cheminCritique.includes(tache.code) && cheminCritique.includes(depCode);
+                drawArrow(toPos.x, toPos.y, fromPos.x, fromPos.y, nodeRadius, isCritical);
+            }
+        });
     });
-    
-    document.getElementById('zoom-out').addEventListener('click', () => {
-        scale /= 1.2;
-        drawDiagram();
+    // Dessiner les nœuds
+    taches.forEach(tache => {
+        const pos = positions[tache.code];
+        if (pos) {
+            drawNode(pos.x, pos.y, tache, nodeRadius);
+        }
     });
+
+    ctx.restore();
+}
+
+// Dessiner un nœud
+function drawNode(x, y, tache, radius) {
+    const isCritical = cheminCritique.includes(tache.code);
+
+    // Cercle
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, 2 * Math.PI);
+    ctx.fillStyle = isCritical ? '#fee2e2' : '#dbeafe';
+    ctx.fill();
+    ctx.strokeStyle = isCritical ? '#ef4444' : '#3b82f6';
+    ctx.lineWidth = isCritical ? 3 : 2;
+    ctx.stroke();
+
+    // Code de la tâche
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 18px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(tache.code, x, y - 15);
+
+    // Nom de la tâche (tronqué)
+    ctx.font = '12px Arial';
+    const maxLength = 10;
+    const nom = tache.nom.length > maxLength ? tache.nom.substring(0, maxLength) + '...' : tache.nom;
+    ctx.fillText(nom, x, y + 5);
+
+    // Durée
+    ctx.font = '11px Arial';
+    ctx.fillStyle = '#666';
+    ctx.fillText(tache.duree + 'j', x, y + 20);
+
+    // Dates (si disponibles)
+    if (tache.date_debut_tot !== null && tache.date_debut_tot !== undefined) {
+        ctx.font = '10px Arial';
+        ctx.fillText(`T: ${tache.date_debut_tot}`, x - 25, y + 35);
+    }
+    if (tache.date_fin_tot !== null && tache.date_fin_tot !== undefined) {
+        ctx.font = '10px Arial';
+        ctx.fillText(`F: ${tache.date_fin_tot}`, x + 25, y + 35);
+    }
+}
+
+// Dessiner une flèche
+function drawArrow(fromX, fromY, toX, toY, nodeRadius, isCritical) {
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const startX = fromX + nodeRadius * Math.cos(angle);
+    const startY = fromY + nodeRadius * Math.sin(angle);
+    const endX = toX - nodeRadius * Math.cos(angle);
+    const endY = toY - nodeRadius * Math.sin(angle);
     
-    document.getElementById('reset-zoom').addEventListener('click', () => {
-        scale = 1;
-        offsetX = 0;
-        offsetY = 0;
-        drawDiagram();
-    });
+    // Ligne de la flèche
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.strokeStyle = isCritical ? '#ef4444' : '#9ca3af';
+    ctx.lineWidth = isCritical ? 3 : 1.5;
+    ctx.stroke();
     
-    // Initialiser au chargement
-    window.addEventListener('load', initCanvas);
-    window.addEventListener('resize', initCanvas);
-</script>
-{% endif %}
-{% endblock %}
+    // Pointe de la flèche
+    const headLength = 15;
+    ctx.beginPath();
+    ctx.moveTo(endX, endY);
+    ctx.lineTo(
+        endX - headLength * Math.cos(angle - Math.PI / 6),
+        endY - headLength * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+        endX - headLength * Math.cos(angle + Math.PI / 6),
+        endY - headLength * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
+    ctx.fillStyle = isCritical ? '#ef4444' : '#9ca3af';
+    ctx.fill();
+}
